@@ -63,6 +63,21 @@ ruff check scripts/ && ruff format scripts/
 - **GPL e metano sono quasi sempre "servito"** (per legge): l'app se ne accorge e
   imposta da sola la modalità giusta quando scegli quei carburanti.
 
+## Manutenzione
+
+L'app è online su <https://jhinlemon.github.io/benzina-vicina/> e si aggiorna da sola
+ogni mattina alle 8:00 UTC (le 10:00 italiane d'estate, le 9:00 d'inverno).
+
+Due cose da sapere per non trovarsela rotta senza capire perché:
+
+- **GitHub spegne i workflow programmati dopo 60 giorni senza attività sul repository.**
+  Non avvisa. Se un giorno i prezzi smettono di aggiornarsi, è quasi certamente questo:
+  basta un commit qualsiasi, o premere "Run workflow" dalla scheda Actions, per
+  riattivarlo. Il conteggio riparte da ogni push.
+- **Se il workflow fallisce, il sito resta com'era.** È voluto: `verifica_dati.py` blocca
+  la pubblicazione se i dati non hanno senso, quindi in caso di guasto vedi prezzi vecchi
+  invece di una pagina vuota. Lo stato delle esecuzioni è nella scheda Actions del repo.
+
 ## Fonte dei dati
 
 Ministero delle Imprese e del Made in Italy — *Carburanti, prezzi praticati e anagrafica
