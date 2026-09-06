@@ -19,6 +19,7 @@ const stato = {
   estrazione: null,
   provinceCaricate: [],
   espanso: null,
+  vistaMappa: false,
   filtri: {
     carburante: "benzina",
     // `modalita` è quella in uso adesso; `modalitaScelta` è l'ultima che ha scelto
@@ -393,7 +394,7 @@ function rigaLista(voce, indice) {
       <button type="button" class="riga-testa" data-id="${impianto.id}" aria-expanded="${aperto}">
         ${prezzoHtml(voce.prezzo)}
         <span class="riga-info">
-          <span class="riga-nome">${testoSicuro(nomeVisibile(impianto))}</span><br>
+          <span class="riga-nome">${testoSicuro(nomeVisibile(impianto))}</span>
           <span class="riga-dove">${testoSicuro(impianto.comune)} · ${testoSicuro(impianto.bandiera)}${etichettaVecchio(impianto)}</span>
         </span>
         <span class="riga-distanza">${km(voce.distanza)}</span>
@@ -476,6 +477,8 @@ function disegna() {
     bloccoMigliore(migliore) +
     `<ul class="elenco">${ordinati.map(rigaLista).join("")}</ul>`;
 
+  if (stato.vistaMappa) disegnaMappa(elenco, migliore);
+
   aggiornaStato(elenco.length);
 }
 
@@ -539,6 +542,206 @@ function aggiornaStato(quanti) {
   const riga = document.getElementById("riga-dati");
   if (stato.estrazione) {
     riga.textContent = `Prezzi ufficiali MIMIT del ${stato.estrazione.split("-").reverse().join("/")}, licenza IODL 2.0.`;
+  }
+}
+
+/* ---------- mappa ----------
+
+   La mappa risponde a una domanda diversa dalla lista: non "quanto costa" ma
+   "da che parte devo andare". Per questo i marcatori mostrano il prezzo scritto
+   e non un puntino generico: cosi' si legge la mappa senza doverla toccare. */
+
+const MASSIMO_SEGNI_MAPPA = 40;
+
+// Spazio minimo fra due etichette di prezzo, in pixel sullo schermo. Sotto questa
+// distanza si coprirebbero a vicenda e non si leggerebbe piu' niente.
+const LARGHEZZA_SEGNO = 64;
+const ALTEZZA_SEGNO = 32;
+
+let mappa = null;
+let stratoSegni = null;
+
+// Serve a ridisegnare i marcatori quando muovi la mappa, senza rifare i filtri
+let datiMappa = { elenco: [], migliore: null };
+
+/** Crea la mappa la prima volta che serve davvero.
+ *
+ * Non la costruisco all'avvio: chi usa solo la lista non deve pagare il costo di
+ * caricare i tasselli e disegnare niente. */
+function preparaMappa() {
+  if (mappa) return;
+
+  mappa = L.map("mappa", {
+    zoomControl: false,
+    attributionControl: true,
+  });
+
+  L.control.zoom({ position: "bottomright" }).addTo(mappa);
+
+  L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    maxZoom: 19,
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+  }).addTo(mappa);
+
+  stratoSegni = L.layerGroup().addTo(mappa);
+
+  // A ogni spostamento o zoom cambia quali etichette si sovrappongono, quindi
+  // vanno riscelte. Non ricalcolo i filtri: uso i dati gia' pronti.
+  mappa.on("moveend zoomend", () => {
+    if (stato.vistaMappa) piazzaSegni();
+  });
+}
+
+/** Sceglie quali marcatori disegnare davvero, evitando che si coprano.
+ *
+ * Scorre i candidati dal piu' importante (il piu' conveniente, poi i piu'
+ * economici) e scarta quelli che finirebbero addosso a uno gia' piazzato.
+ * Cosi' quando i distributori sono fitti resta visibile il migliore della zona
+ * invece di un ammasso illeggibile. */
+function diradaSegni(candidati, migliore) {
+  const inOrdine = candidati.slice().sort((a, b) => {
+    if (a === migliore) return -1;
+    if (b === migliore) return 1;
+    return a.prezzo - b.prezzo;
+  });
+
+  // Un margine oltre il bordo, così i marcatori non spuntano dal nulla trascinando
+  const bordi = mappa.getBounds().pad(0.15);
+
+  const scelti = [];
+  const occupati = [];
+
+  for (const voce of inOrdine) {
+    const posizione = L.latLng(voce.impianto.lat, voce.impianto.lon);
+    if (!bordi.contains(posizione)) continue;
+
+    const punto = mappa.latLngToContainerPoint(posizione);
+    const copreUnAltro = occupati.some(
+      (altro) =>
+        Math.abs(altro.x - punto.x) < LARGHEZZA_SEGNO &&
+        Math.abs(altro.y - punto.y) < ALTEZZA_SEGNO
+    );
+    if (copreUnAltro) continue;
+
+    occupati.push(punto);
+    scelti.push(voce);
+
+    if (scelti.length >= MASSIMO_SEGNI_MAPPA) break;
+  }
+
+  return scelti;
+}
+
+function piazzaSegni() {
+  const { elenco, migliore } = datiMappa;
+  if (!elenco.length) return;
+
+  stratoSegni.clearLayers();
+
+  L.marker([stato.posizione.lat, stato.posizione.lon], {
+    icon: L.divIcon({
+      className: "segno-tu",
+      html: '<span class="punto-tu"></span>',
+      iconSize: [18, 18],
+    }),
+    keyboard: false,
+    interactive: false,
+  }).addTo(stratoSegni);
+
+  const visibili = diradaSegni(elenco, migliore);
+  // Le fasce di colore si calcolano su tutto l'elenco, non solo sui visibili:
+  // altrimenti "il piu' caro dello schermo" cambierebbe colore a ogni zoom.
+  const prezziOrdinati = elenco.map((v) => v.prezzo).sort((a, b) => a - b);
+
+  for (const voce of visibili) {
+    const fascia = voce === migliore ? "migliore" : fasciaPrezzo(voce.prezzo, prezziOrdinati);
+
+    const segno = L.divIcon({
+      className: "",
+      html: `<span class="segno segno--${fascia}">${prezzoHtml(voce.prezzo)}</span>`,
+      iconSize: [58, 26],
+      iconAnchor: [29, 30],
+      popupAnchor: [0, -30],
+    });
+
+    L.marker([voce.impianto.lat, voce.impianto.lon], {
+      icon: segno,
+      zIndexOffset: voce === migliore ? 1000 : 0,
+    })
+      .bindPopup(contenutoFinestra(voce), { className: "finestra", closeButton: true })
+      .addTo(stratoSegni);
+  }
+}
+
+/** Divide i prezzi in tre fasce, per colorare i marcatori.
+ *
+ * Il colore da solo non basta mai (c'e' chi non distingue verde e rosso): il
+ * prezzo resta scritto dentro il marcatore, e il colore e' un aiuto in piu',
+ * non l'unico modo per capire. */
+function fasciaPrezzo(prezzo, ordinati) {
+  if (ordinati.length < 3) return "medio";
+
+  const primoTerzo = ordinati[Math.floor(ordinati.length / 3)];
+  const secondoTerzo = ordinati[Math.floor((ordinati.length * 2) / 3)];
+
+  if (prezzo <= primoTerzo) return "basso";
+  if (prezzo <= secondoTerzo) return "medio";
+  return "alto";
+}
+
+function contenutoFinestra(voce) {
+  const impianto = voce.impianto;
+  return `
+    <p class="finestra-nome">${testoSicuro(nomeVisibile(impianto))}</p>
+    <p class="finestra-dove">${testoSicuro(impianto.comune)} · ${km(voce.distanza)} · ${testoSicuro(impianto.bandiera)}</p>
+    <p class="finestra-prezzo">${prezzoHtml(voce.prezzo)}</p>
+    <div class="azioni">
+      <a class="azione" href="${percorsoAppleMaps(impianto)}">Portami lì</a>
+      <a class="azione secondaria" href="${percorsoGoogleMaps(impianto)}">Google Maps</a>
+    </div>`;
+}
+
+function disegnaMappa(elenco, migliore) {
+  preparaMappa();
+
+  const eraVuota = datiMappa.elenco.length === 0;
+  datiMappa = { elenco, migliore };
+
+  // L'inquadratura la scelgo solo la prima volta: se la rifacessi a ogni
+  // ridisegno, la mappa salterebbe via ogni volta che l'hai spostata a mano.
+  if (eraVuota) inquadra(elenco);
+  else piazzaSegni();
+}
+
+/** Sceglie l'inquadratura di partenza: dove sei, più i distributori vicini.
+ *
+ * Inquadrare tutto porterebbe a uno zoom da satellite quando il raggio è largo.
+ * Uso i 10 più vicini, che sono quelli fra cui sceglierai davvero. */
+function inquadra(elenco) {
+  const perDistanza = elenco.slice().sort((a, b) => a.distanza - b.distanza);
+  const punti = perDistanza.slice(0, 10).map((v) => [v.impianto.lat, v.impianto.lon]);
+  punti.push([stato.posizione.lat, stato.posizione.lon]);
+
+  // fitBounds fa scattare moveend, che chiama piazzaSegni: i marcatori vengono
+  // disegnati li', quando la mappa e' gia' nell'inquadratura definitiva.
+  mappa.fitBounds(L.latLngBounds(punti), { padding: [45, 45], maxZoom: 15 });
+  piazzaSegni();
+}
+
+function mostraMappa(attiva) {
+  stato.vistaMappa = attiva;
+  document.body.classList.toggle("modo-mappa", attiva);
+
+  const bottone = document.getElementById("cambia-vista");
+  bottone.textContent = attiva ? "Lista" : "Mappa";
+  bottone.setAttribute("aria-pressed", String(attiva));
+
+  if (attiva) {
+    disegna();
+    // Leaflet misura il contenitore quando lo crea: se lo creo mentre e' ancora
+    // nascosto misura zero e i tasselli restano grigi. invalidateSize lo rimisura
+    // ora che ha una dimensione vera.
+    if (mappa) mappa.invalidateSize();
   }
 }
 
@@ -680,6 +883,10 @@ function collegaEventi() {
       salvaPreferenze();
       disegna();
     });
+  });
+
+  document.getElementById("cambia-vista").addEventListener("click", () => {
+    mostraMappa(!stato.vistaMappa);
   });
 
   const apri = document.getElementById("apri-impostazioni");

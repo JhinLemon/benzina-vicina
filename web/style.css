@@ -69,12 +69,17 @@ button, input, select { font: inherit; color: inherit; }
 
 /* ---------- testa ---------- */
 
-.testa {
-  padding: calc(16px + var(--sicuro-sopra)) 16px 12px;
-  background: var(--fondo);
+/* Un solo elemento appiccicato per tutti i comandi: intestazione e selettori
+   scorrono insieme e si fermano insieme, senza coprirsi a vicenda. */
+.barra {
   position: sticky;
   top: 0;
   z-index: 3;
+  background: var(--fondo);
+}
+
+.testa {
+  padding: calc(16px + var(--sicuro-sopra)) 16px 12px;
   border-bottom: 1px solid var(--riga);
 }
 
@@ -111,9 +116,6 @@ h1 {
 /* ---------- scelte principali ---------- */
 
 .scelte {
-  position: sticky;
-  top: 0;
-  z-index: 2;
   display: flex;
   flex-direction: column;
   gap: 7px;
@@ -348,8 +350,19 @@ select, input[type="number"] {
 
 .riga-testa:hover { background: var(--pannello); }
 
-.riga-nome {
+/* Senza questo la colonna 1fr non scende mai sotto la larghezza del suo
+   contenuto (in una griglia il minimo predefinito è `auto`, non zero): un nome
+   lungo allargherebbe la pagina oltre lo schermo, e il telefono rimpicciolirebbe
+   tutto per farcela stare. */
+.riga-info {
+  display: block;
   min-width: 0;
+}
+
+/* `display: block` non è decorativo: overflow ed ellipsis non hanno alcun
+   effetto su un elemento inline, quindi il taglio con i puntini non avverrebbe. */
+.riga-nome {
+  display: block;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -358,6 +371,7 @@ select, input[type="number"] {
 }
 
 .riga-dove {
+  display: block;
   font-size: 0.79rem;
   color: var(--spento);
   overflow: hidden;
@@ -419,6 +433,112 @@ select, input[type="number"] {
 }
 
 .tabella-prezzi td.assente { color: var(--spento); font-weight: 400; }
+
+/* ---------- mappa ---------- */
+
+#mappa { display: none; }
+
+/* In modalità mappa la pagina non scorre: la mappa prende tutto lo spazio che
+   resta sotto i comandi, e si trascina lei invece della pagina. */
+body.modo-mappa {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  overflow: hidden;
+}
+
+body.modo-mappa #mappa {
+  display: block;
+  flex: 1;
+  /* senza questo un figlio flessibile non scende mai sotto il suo contenuto */
+  min-height: 0;
+  background: var(--pannello-alt);
+}
+
+body.modo-mappa #risultati,
+body.modo-mappa .piede { display: none; }
+
+/* In mappa non serve niente di appiccicato: la pagina non scorre affatto */
+body.modo-mappa .barra { position: static; }
+
+.testa-bottoni { display: flex; gap: 16px; }
+
+/* I tasselli di OpenStreetMap esistono solo in versione chiara: al buio li giro
+   e li smorzo, così la mappa non spara luce bianca in faccia di notte. */
+@media (prefers-color-scheme: dark) {
+  .leaflet-tile {
+    filter: invert(1) hue-rotate(180deg) brightness(1.08) contrast(1.05) saturate(0.45);
+  }
+}
+
+/* Il marcatore mostra il prezzo scritto: una mappa di puntini uguali
+   costringerebbe a toccarli uno per uno per sapere quanto costano. */
+.segno {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3px 7px;
+  border-radius: 6px;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  background: var(--pannello);
+  color: var(--inchiostro);
+  font-size: 0.82rem;
+  font-weight: 600;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+  white-space: nowrap;
+}
+
+.segno .prezzo { font-size: 0.82rem; }
+
+/* Il colore è un aiuto in più, non l'unica informazione: il prezzo resta
+   sempre leggibile dentro il marcatore, anche per chi non distingue i colori. */
+.segno--basso { background: var(--verde-fondo); border-color: var(--verde); color: var(--verde); }
+.segno--alto { background: var(--allerta-fondo); border-color: var(--allerta); color: var(--allerta); }
+
+.segno--migliore {
+  background: var(--verde);
+  border-color: var(--verde);
+  color: #FFFFFF;
+  font-size: 0.92rem;
+  padding: 5px 10px;
+}
+
+@media (prefers-color-scheme: dark) {
+  .segno--migliore { color: #08120F; }
+}
+
+.segno--migliore .prezzo { font-size: 0.92rem; }
+
+/* Dove sei tu: un punto solo, che non deve competere coi prezzi */
+.punto-tu {
+  display: block;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #1B72E8;
+  border: 2.5px solid #FFFFFF;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.25);
+}
+
+.leaflet-popup-content-wrapper {
+  background: var(--pannello);
+  color: var(--inchiostro);
+  border-radius: 10px;
+}
+
+.leaflet-popup-tip { background: var(--pannello); }
+
+.leaflet-popup-content { margin: 13px 14px; min-width: 190px; }
+
+.finestra-nome { margin: 0; font-size: 0.95rem; font-weight: 600; }
+.finestra-dove { margin: 2px 0 0; font-size: 0.82rem; color: var(--spento); }
+.finestra-prezzo { margin: 8px 0 0; }
+.finestra-prezzo .prezzo { font-size: 1.5rem; }
+.leaflet-popup-content .azioni { margin-top: 11px; }
+.leaflet-popup-content .azione { font-size: 0.84rem; min-height: 38px; }
+
+.leaflet-container { font: inherit; }
+.leaflet-control-attribution { font-size: 0.65rem; }
 
 /* ---------- messaggi ---------- */
 

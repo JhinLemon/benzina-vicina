@@ -9,7 +9,9 @@
    - i dati dei prezzi: prima la rete, perché un prezzo vecchio è inutile, ma
      con la cache pronta a salvare la situazione se la rete non c'è. */
 
-const VERSIONE = "benzina-vicina-v1";
+// Cambiare questo numero a ogni modifica del guscio: e' cosi' che il service
+// worker capisce di dover buttare la cache vecchia invece di servirla per sempre.
+const VERSIONE = "benzina-vicina-v2";
 const CACHE_GUSCIO = `${VERSIONE}-guscio`;
 const CACHE_DATI = `${VERSIONE}-dati`;
 
@@ -20,7 +22,13 @@ const FILE_GUSCIO = [
   "app.js",
   "manifest.json",
   "icon-180.png",
+  "vendor/leaflet.js",
+  "vendor/leaflet.css",
 ];
+
+// I tasselli della mappa arrivano da openstreetmap.org, quindi da un altro dominio:
+// il service worker li lascia passare e non li salva. Senza rete la mappa mostra i
+// marcatori su fondo vuoto, mentre la lista continua a funzionare del tutto.
 
 self.addEventListener("install", (evento) => {
   evento.waitUntil(

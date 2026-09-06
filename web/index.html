@@ -14,16 +14,26 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="vendor/leaflet.css">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
+<!-- Intestazione e selettori stanno in un unico contenitore appiccicato: se fossero
+     due sticky separati si incollerebbero entrambi a top:0 e si coprirebbero. -->
+<div class="barra">
+
 <header class="testa">
   <div class="testa-riga">
     <h1>Benzina Vicina</h1>
-    <button type="button" id="apri-impostazioni" class="bottone-icona" aria-expanded="false" aria-controls="pannello-impostazioni">
-      Impostazioni
-    </button>
+    <div class="testa-bottoni">
+      <button type="button" id="cambia-vista" class="bottone-icona" aria-pressed="false">
+        Mappa
+      </button>
+      <button type="button" id="apri-impostazioni" class="bottone-icona" aria-expanded="false" aria-controls="pannello-impostazioni">
+        Impostazioni
+      </button>
+    </div>
   </div>
   <p class="stato" id="stato" role="status">Cerco dove sei…</p>
 </header>
@@ -41,6 +51,8 @@
     <button type="button" class="scelta" data-modalita="servito">Servito</button>
   </div>
 </nav>
+
+</div><!-- /barra -->
 
 <!-- Filtri secondari: si cambiano di rado, stanno chiusi -->
 <div class="pannello" id="pannello-impostazioni" hidden>
@@ -93,6 +105,8 @@
   </div>
 </div>
 
+<div id="mappa" role="application" aria-label="Mappa dei distributori"></div>
+
 <main id="risultati">
   <p class="vuoto" id="messaggio">Carico i dati…</p>
 </main>
@@ -102,6 +116,7 @@
   <p>Le distanze sono in linea d'aria, non su strada.</p>
 </footer>
 
+<script src="vendor/leaflet.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

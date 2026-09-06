@@ -23,15 +23,26 @@ Il contratto fra le due metà è la forma del JSON: se cambia quella, cambiano e
 Non c'è nessun server: la pipeline gira su GitHub Actions, il sito è statico su GitHub Pages.
 Costo totale: zero.
 
+Ci sono due viste, perché rispondono a domande diverse: la **lista** dice quanto costa,
+la **mappa** dice da che parte è. Sulla mappa ogni distributore è un'etichetta col prezzo
+scritto dentro, così si legge senza toccare niente.
+
 ## Struttura
 
 ```
 scripts/build_data.py     scarica i CSV del MIMIT e costruisce i JSON
 scripts/verifica_dati.py  controlla che i dati abbiano senso prima di pubblicarli
 web/                      il sito: HTML, CSS e JavaScript a mano, nessun framework
+web/vendor/               Leaflet, l'unica libreria usata (per la mappa)
 web/data/                 i JSON generati (non versionati: si ricostruiscono)
 .github/workflows/        l'automazione giornaliera
 ```
+
+L'unica dipendenza è **Leaflet** per la mappa, tenuta dentro il progetto invece che presa
+da un CDN: così resta in cache col resto del sito, funziona senza dipendere da server
+altrui e non manda i dati di navigazione a terzi. I tasselli della mappa arrivano invece
+da OpenStreetMap, quindi senza rete la mappa mostra i marcatori su fondo vuoto — la lista
+continua a funzionare del tutto.
 
 ## Lavorarci in locale
 
