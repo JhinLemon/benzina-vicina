@@ -463,8 +463,9 @@ body.modo-mappa .barra { position: static; }
 
 .testa-bottoni { display: flex; gap: 16px; }
 
-/* I tasselli di OpenStreetMap esistono solo in versione chiara: al buio li giro
-   e li smorzo, così la mappa non spara luce bianca in faccia di notte. */
+/* OpenStreetMap pubblica solo la versione chiara. Al buio la inverto e la smorzo,
+   così di notte non spara luce bianca in faccia. È un ripiego, non uno stile
+   notturno vero: i servizi che ne offrono uno ora vogliono una chiave a pagamento. */
 @media (prefers-color-scheme: dark) {
   .leaflet-tile {
     filter: invert(1) hue-rotate(180deg) brightness(1.08) contrast(1.05) saturate(0.45);

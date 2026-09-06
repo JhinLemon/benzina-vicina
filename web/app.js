@@ -558,6 +558,11 @@ const MASSIMO_SEGNI_MAPPA = 40;
 const LARGHEZZA_SEGNO = 64;
 const ALTEZZA_SEGNO = 32;
 
+const TASSELLI = "https://tile.openstreetmap.org/{z}/{x}/{y}.png";
+
+const ATTRIBUZIONE =
+  '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>';
+
 let mappa = null;
 let stratoSegni = null;
 
@@ -578,9 +583,16 @@ function preparaMappa() {
 
   L.control.zoom({ position: "bottomright" }).addTo(mappa);
 
-  L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+  L.tileLayer(TASSELLI, {
     maxZoom: 19,
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+    attribution: ATTRIBUZIONE,
+    // Sugli schermi ad alta densita' (tutti i telefoni) un tassello normale viene
+    // stirato su quattro pixel fisici e si vede sfocato. Con detectRetina Leaflet
+    // chiede i tasselli di un livello di zoom piu' profondo e li mostra a meta'
+    // grandezza: stessa area, il doppio del dettaglio. Costa quattro richieste
+    // invece di una, ed e' l'unico modo con OpenStreetMap, che non pubblica
+    // tasselli a doppia risoluzione.
+    detectRetina: true,
   }).addTo(mappa);
 
   stratoSegni = L.layerGroup().addTo(mappa);
