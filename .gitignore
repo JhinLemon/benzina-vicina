@@ -1,0 +1,13 @@
+# macOS mette questi file nascosti in ogni cartella che apri col Finder
+.DS_Store
+
+# editor
+.vscode/
+.idea/
+
+# Python compila i moduli qui: si rigenerano da soli, non vanno versionati
+__pycache__/
+*.pyc
+
+# ambiente virtuale creato da uv: si ricrea con `uv sync`, non va versionato
+.venv/

@@ -1,0 +1,13 @@
+[project]
+name = "benzina-vicina"
+version = "0.1.0"
+description = "Confronta i prezzi dei distributori di benzina vicini, usando i dati MIMIT"
+authors = [
+    { name = "JhinLemon" }
+]
+requires-python = ">=3.13"
+dependencies = []
+
+# niente pacchetto da installare: qui ci sono solo script che si lanciano con `uv run`
+[tool.uv]
+package = false
