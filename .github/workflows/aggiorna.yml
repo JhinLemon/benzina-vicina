@@ -1,0 +1,62 @@
+name: Aggiorna prezzi e pubblica
+
+on:
+  schedule:
+    # 08:00 UTC = 10:00 in Italia d'estate, 09:00 d'inverno.
+    # Il file del ministero si chiama "prezzo_alle_8": prima di quell'ora non e' pronto.
+    # Nota: i cron di GitHub partono spesso con qualche minuto di ritardo, e' normale.
+    - cron: "0 8 * * *"
+
+  # Permette di lanciarlo a mano dalla scheda Actions, utile mentre sviluppi
+  workflow_dispatch:
+
+  # Ogni modifica al sito o allo script ripubblica subito
+  push:
+    branches: [main]
+
+# Permessi minimi necessari a pubblicare su GitHub Pages
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Se parte un aggiornamento mentre il precedente e' ancora in corso, aspetta
+# invece di annullarlo: due pubblicazioni sovrapposte si pesterebbero i piedi.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  costruisci-e-pubblica:
+    runs-on: ubuntu-latest
+
+    environment:
+      name: github-pages
+      url: ${{ steps.pubblica.outputs.page_url }}
+
+    steps:
+      - name: Scarica il codice del repository
+        uses: actions/checkout@v4
+
+      - name: Prepara Python con uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.13"
+
+      - name: Costruisci i JSON dai dati MIMIT
+        run: uv run scripts/build_data.py
+
+      - name: Controlla che i dati siano sensati
+        run: uv run scripts/verifica_dati.py
+
+      - name: Prepara la pubblicazione
+        uses: actions/configure-pages@v5
+
+      - name: Impacchetta la cartella web
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: web
+
+      - name: Pubblica su GitHub Pages
+        id: pubblica
+        uses: actions/deploy-pages@v4

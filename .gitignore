@@ -11,3 +11,10 @@ __pycache__/
 
 # ambiente virtuale creato da uv: si ricrea con `uv sync`, non va versionato
 .venv/
+
+# i JSON sono output rigenerabile, non sorgente: li ricostruisce build_data.py.
+# Committarli ogni giorno gonfierebbe il repo di ~2 GB l'anno per dati che scadono in 24 ore.
+web/data/
+
+# configurazione locale degli strumenti, non riguarda il progetto
+.claude/

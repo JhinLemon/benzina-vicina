@@ -1,32 +1,70 @@
 # Benzina Vicina
 
-Trova i distributori di benzina più convenienti vicino a te, usando i dati ufficiali del MIMIT (Ministero delle Imprese e del Made in Italy), aggiornati ogni giorno.
+Trova i distributori più convenienti vicino a te, con i prezzi ufficiali del MIMIT
+(Ministero delle Imprese e del Made in Italy) aggiornati ogni giorno.
+
+Non mostra solo il più economico: calcola **quanto risparmi davvero**, tolto il carburante
+che consumi per arrivarci. Spesso il distributore a 8 km che costa 5 centesimi in meno
+non conviene affatto.
 
 ## Come funziona
 
-Una pipeline Python (`scripts/build_data.py`) scarica ogni mattina i CSV pubblici del MIMIT, li unisce, normalizza carburanti e bandiere, e scrive un file JSON per provincia in `data/`. Il sito statico in `web/` legge il JSON della provincia più vicina (via geolocalizzazione) e mostra la lista ordinabile, con link per aprire il percorso in Mappe.
+Il lavoro è diviso in due metà che non si toccano mai direttamente:
 
-Nessun server: la pipeline gira una volta al giorno via GitHub Actions, il sito è statico su GitHub Pages.
+1. **Una volta al giorno, su GitHub Actions** — `scripts/build_data.py` scarica i due CSV
+   pubblici del ministero (~7 MB), li unisce, normalizza le 58 varianti commerciali di
+   carburante in 4 categorie, scarta i dati rotti e scrive un JSON per provincia.
+2. **Ogni volta che apri l'app, sul telefono** — la pagina capisce in che provincia sei,
+   scarica solo i 3 JSON delle province più vicine (50–300 KB l'uno), calcola distanze e
+   convenienza, e mostra la lista.
+
+Il contratto fra le due metà è la forma del JSON: se cambia quella, cambiano entrambe.
+
+Non c'è nessun server: la pipeline gira su GitHub Actions, il sito è statico su GitHub Pages.
+Costo totale: zero.
 
 ## Struttura
 
 ```
-scripts/   script Python che prepara i dati
-data/      JSON generati, uno per provincia (es. PD.json)
-web/       sito statico (HTML/CSS/JS, nessun framework)
+scripts/build_data.py     scarica i CSV del MIMIT e costruisce i JSON
+scripts/verifica_dati.py  controlla che i dati abbiano senso prima di pubblicarli
+web/                      il sito: HTML, CSS e JavaScript a mano, nessun framework
+web/data/                 i JSON generati (non versionati: si ricostruiscono)
+.github/workflows/        l'automazione giornaliera
 ```
 
-## Come si avvia
+## Lavorarci in locale
 
 ```bash
-uv sync                        # installa le dipendenze in .venv
-uv run scripts/build_data.py   # genera i JSON in data/
+uv sync                          # crea .venv con Python 3.13
+uv run scripts/build_data.py     # scarica i dati e genera web/data/
+uv run scripts/verifica_dati.py  # controlla che siano sensati
+python3 -m http.server --directory web 8765
 ```
 
-Per provare il sito in locale: `python3 -m http.server --directory web`
+Poi apri <http://localhost:8765>. La geolocalizzazione funziona su `localhost` anche senza
+HTTPS, perché il browser considera `localhost` un contesto sicuro.
 
-## Note
+Prima di committare:
 
-Piano tecnico completo e trappole note: vedi la roadmap discussa con Claude Code (7 step, verificabili uno alla volta).
+```bash
+ruff check scripts/ && ruff format scripts/
+```
 
-Fonte dati: MIMIT — *Carburanti, prezzi praticati e anagrafica degli impianti*, licenza IODL 2.0.
+## Scelte da sapere
+
+- **I prezzi "premium" sono esclusi.** V-Power, Blue Diesel, HVO e simili costano di più
+  perché sono prodotti diversi: metterli nella stessa classifica della benzina normale
+  falserebbe il confronto. Restano fuori.
+- **Self e servito non si mescolano mai.** Il servito costa 30–40 centesimi in più.
+- **I prezzi più vecchi di 7 giorni vengono buttati**, e quelli fermi da più di 3 giorni
+  rispetto alla rilevazione sono segnalati nella lista.
+- **Le distanze sono in linea d'aria**, non su strada: servono a ordinare, non a navigare.
+- **GPL e metano sono quasi sempre "servito"** (per legge): l'app se ne accorge e
+  imposta da sola la modalità giusta quando scegli quei carburanti.
+
+## Fonte dei dati
+
+Ministero delle Imprese e del Made in Italy — *Carburanti, prezzi praticati e anagrafica
+degli impianti*, licenza IODL 2.0. La licenza obbliga a citare la fonte in ogni riuso
+pubblico: la citazione è in fondo alla pagina dell'app.

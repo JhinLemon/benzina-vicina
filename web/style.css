@@ -1,0 +1,463 @@
+/* Benzina Vicina — foglio di stile unico.
+
+   Principio guida: questa pagina si guarda per due secondi, spesso in auto.
+   Il prezzo è la cosa più grande dello schermo, tutto il resto è conferma.
+   Un solo carattere (Archivo) su tutta la scala: a schermo piccolo e in
+   controluce un grottesco robusto si legge meglio di qualsiasi serif. */
+
+:root {
+  --fondo: #F2F4F0;
+  --pannello: #FFFFFF;
+  --pannello-alt: #E9EDE7;
+  --inchiostro: #101714;
+  --spento: #59665F;
+  --riga: #DBE1D9;
+  --verde: #0A6E55;
+  --verde-fondo: #E1EFE9;
+  --allerta: #8F5405;
+  --allerta-fondo: #F7EDDC;
+
+  --raggio: 10px;
+  /* Su iPhone la barra inferiore e la tacca mangiano spazio: senza questi
+     l'ultimo elemento della lista finisce sotto la barra di sistema. */
+  --sicuro-sotto: env(safe-area-inset-bottom, 0px);
+  --sicuro-sopra: env(safe-area-inset-top, 0px);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --fondo: #0C120F;
+    --pannello: #151C19;
+    --pannello-alt: #1D2622;
+    --inchiostro: #E6EDE8;
+    --spento: #94A29B;
+    --riga: #26302C;
+    --verde: #4FC79E;
+    --verde-fondo: #102C25;
+    --allerta: #DDA24F;
+    --allerta-fondo: #2A2113;
+  }
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+/* Serve perché più sotto do `display: flex` a elementi che nascondo con `hidden`:
+   una regola su classe batte quella di default del browser sull'attributo. */
+[hidden] { display: none !important; }
+
+html { color-scheme: light dark; }
+
+body {
+  margin: 0;
+  background: var(--fondo);
+  color: var(--inchiostro);
+  font-family: "Archivo", system-ui, -apple-system, "Helvetica Neue", sans-serif;
+  font-size: 16px;
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+  /* impedisce a iOS di ingrandire il testo quando ruoti il telefono */
+  -webkit-text-size-adjust: 100%;
+}
+
+button, input, select { font: inherit; color: inherit; }
+
+:focus-visible {
+  outline: 2px solid var(--verde);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* ---------- testa ---------- */
+
+.testa {
+  padding: calc(16px + var(--sicuro-sopra)) 16px 12px;
+  background: var(--fondo);
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  border-bottom: 1px solid var(--riga);
+}
+
+.testa-riga {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+h1 {
+  margin: 0;
+  font-size: 1.06rem;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+}
+
+.bottone-icona {
+  background: none;
+  border: none;
+  padding: 6px 0;
+  color: var(--verde);
+  font-size: 0.86rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.stato {
+  margin: 3px 0 0;
+  font-size: 0.83rem;
+  color: var(--spento);
+}
+
+/* ---------- scelte principali ---------- */
+
+.scelte {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  padding: 11px 16px;
+  background: var(--fondo);
+  border-bottom: 1px solid var(--riga);
+}
+
+.gruppo { display: flex; gap: 6px; }
+
+.scelta {
+  flex: 1;
+  /* 44px è la dimensione minima perché un dito ci prenda senza sbagliare */
+  min-height: 40px;
+  padding: 0 10px;
+  background: var(--pannello);
+  border: 1px solid var(--riga);
+  border-radius: var(--raggio);
+  font-size: 0.87rem;
+  font-weight: 500;
+  color: var(--spento);
+  cursor: pointer;
+}
+
+.scelta.attiva {
+  background: var(--verde);
+  border-color: var(--verde);
+  color: #FFFFFF;
+  font-weight: 600;
+}
+
+.scelta:disabled {
+  opacity: 0.38;
+  cursor: not-allowed;
+}
+
+@media (prefers-color-scheme: dark) {
+  .scelta.attiva { color: #08120F; }
+}
+
+/* ---------- pannello impostazioni ---------- */
+
+.pannello {
+  padding: 16px;
+  background: var(--pannello);
+  border-bottom: 1px solid var(--riga);
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.campo { display: flex; flex-direction: column; gap: 6px; }
+.campo.doppio { flex-direction: row; gap: 12px; }
+.campo.doppio > div { flex: 1; display: flex; flex-direction: column; gap: 6px; }
+
+.campo label, .interruttore span {
+  font-size: 0.84rem;
+  font-weight: 500;
+  color: var(--spento);
+}
+
+.campo-riga { display: flex; align-items: center; gap: 12px; }
+.campo-riga input[type="range"] { flex: 1; accent-color: var(--verde); }
+
+output {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  font-size: 0.9rem;
+  min-width: 4.2em;
+  text-align: right;
+}
+
+select, input[type="number"] {
+  min-height: 40px;
+  padding: 0 10px;
+  background: var(--fondo);
+  border: 1px solid var(--riga);
+  border-radius: 8px;
+}
+
+.interruttore {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+}
+
+.interruttore input {
+  width: 20px;
+  height: 20px;
+  accent-color: var(--verde);
+}
+
+.nota {
+  margin: -6px 0 0;
+  font-size: 0.78rem;
+  color: var(--spento);
+  line-height: 1.4;
+}
+
+/* ---------- il migliore: l'unico elemento che alza la voce ---------- */
+
+.migliore {
+  margin: 14px 16px 0;
+  padding: 15px 16px 14px;
+  background: var(--pannello);
+  border: 1px solid var(--verde);
+  border-radius: var(--raggio);
+}
+
+.migliore-etichetta {
+  font-size: 0.79rem;
+  font-weight: 600;
+  color: var(--verde);
+  margin: 0 0 9px;
+}
+
+.migliore-corpo {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.migliore-info { min-width: 0; }
+
+.migliore-nome {
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  margin: 0;
+  /* i nomi impianto possono essere lunghissimi: taglio invece di mandare a capo */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.migliore-dove {
+  margin: 2px 0 0;
+  font-size: 0.85rem;
+  color: var(--spento);
+}
+
+.risparmio {
+  margin: 10px 0 0;
+  font-size: 0.87rem;
+  color: var(--inchiostro);
+}
+
+.risparmio b { color: var(--verde); font-weight: 600; }
+
+.azioni {
+  display: flex;
+  gap: 8px;
+  margin-top: 13px;
+}
+
+.azione {
+  flex: 1;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--verde);
+  color: #FFFFFF;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.azione.secondaria {
+  background: var(--pannello-alt);
+  color: var(--inchiostro);
+}
+
+@media (prefers-color-scheme: dark) {
+  .azione { color: #08120F; }
+}
+
+/* ---------- prezzo: convenzione dei totem dei distributori ----------
+   Sui cartelloni dei benzinai il terzo decimale (il decimo di centesimo)
+   è scritto più piccolo. Riprodurla rende il numero leggibile a colpo
+   d'occhio: l'occhio legge "1,78" e il resto è dettaglio. */
+
+.prezzo {
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.prezzo .millesimi {
+  font-size: 0.58em;
+  vertical-align: 0.62em;
+  letter-spacing: 0;
+  margin-left: 0.04em;
+}
+
+.migliore .prezzo { font-size: 2.35rem; }
+.riga .prezzo { font-size: 1.28rem; }
+
+/* ---------- lista ---------- */
+
+.elenco {
+  list-style: none;
+  margin: 16px 0 0;
+  padding: 0;
+  border-top: 1px solid var(--riga);
+}
+
+/* Righe rigate, non schede: una linea sottile dice "questa è una classifica",
+   mentre delle schede tutte uguali direbbero "questi sono alla pari". */
+.riga { border-bottom: 1px solid var(--riga); }
+
+.riga-testa {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 4.6em 1fr auto;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  min-height: 58px;
+  background: none;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+}
+
+.riga-testa:hover { background: var(--pannello); }
+
+.riga-nome {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.93rem;
+  font-weight: 500;
+}
+
+.riga-dove {
+  font-size: 0.79rem;
+  color: var(--spento);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.riga-distanza {
+  font-size: 0.83rem;
+  color: var(--spento);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.vecchio {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: var(--allerta-fondo);
+  color: var(--allerta);
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+
+/* ---------- dettaglio aperto ---------- */
+
+.dettaglio {
+  padding: 2px 16px 16px;
+  background: var(--pannello);
+}
+
+.dettaglio-indirizzo {
+  margin: 0 0 11px;
+  font-size: 0.85rem;
+  color: var(--spento);
+}
+
+.tabella-prezzi {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.86rem;
+  margin-bottom: 6px;
+}
+
+.tabella-prezzi th {
+  text-align: left;
+  font-weight: 500;
+  color: var(--spento);
+  padding: 4px 0;
+}
+
+.tabella-prezzi td {
+  text-align: right;
+  padding: 4px 0;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+.tabella-prezzi td.assente { color: var(--spento); font-weight: 400; }
+
+/* ---------- messaggi ---------- */
+
+.vuoto {
+  margin: 0;
+  padding: 40px 24px;
+  text-align: center;
+  color: var(--spento);
+  font-size: 0.92rem;
+  line-height: 1.5;
+}
+
+.vuoto .azione {
+  display: inline-flex;
+  margin-top: 16px;
+  padding: 0 20px;
+  flex: none;
+}
+
+.piede {
+  padding: 22px 16px calc(24px + var(--sicuro-sotto));
+  color: var(--spento);
+  font-size: 0.76rem;
+  line-height: 1.5;
+}
+
+.piede p { margin: 0 0 3px; }
+
+/* Un solo momento di movimento: la lista che compare quando i dati arrivano.
+   Chi ha chiesto meno animazioni al sistema non lo vede proprio. */
+@media (prefers-reduced-motion: no-preference) {
+  .entra { animation: entra 0.28s ease-out both; }
+}
+
+@keyframes entra {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+
+@media (min-width: 620px) {
+  body { max-width: 620px; margin: 0 auto; }
+}

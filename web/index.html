@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Benzina Vicina</title>
+<meta name="description" content="I distributori più convenienti vicino a te, con i prezzi ufficiali del MIMIT aggiornati ogni giorno.">
+<meta name="theme-color" content="#F2F4F0" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0C120F" media="(prefers-color-scheme: dark)">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Benzina">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="testa">
+  <div class="testa-riga">
+    <h1>Benzina Vicina</h1>
+    <button type="button" id="apri-impostazioni" class="bottone-icona" aria-expanded="false" aria-controls="pannello-impostazioni">
+      Impostazioni
+    </button>
+  </div>
+  <p class="stato" id="stato" role="status">Cerco dove sei…</p>
+</header>
+
+<!-- Scelte che cambiano di continuo: sempre in vista, mai dietro un menu -->
+<nav class="scelte" aria-label="Carburante e modalità">
+  <div class="gruppo" role="group" aria-label="Carburante">
+    <button type="button" class="scelta attiva" data-carburante="benzina">Benzina</button>
+    <button type="button" class="scelta" data-carburante="gasolio">Gasolio</button>
+    <button type="button" class="scelta" data-carburante="gpl">GPL</button>
+    <button type="button" class="scelta" data-carburante="metano">Metano</button>
+  </div>
+  <div class="gruppo" role="group" aria-label="Modalità di servizio">
+    <button type="button" class="scelta attiva" data-modalita="self">Self</button>
+    <button type="button" class="scelta" data-modalita="servito">Servito</button>
+  </div>
+</nav>
+
+<!-- Filtri secondari: si cambiano di rado, stanno chiusi -->
+<div class="pannello" id="pannello-impostazioni" hidden>
+  <div class="campo">
+    <label for="raggio">Distanza massima</label>
+    <div class="campo-riga">
+      <input type="range" id="raggio" min="2" max="50" step="1" value="10">
+      <output for="raggio" id="raggio-valore">10 km</output>
+    </div>
+  </div>
+
+  <div class="campo">
+    <label for="bandiera">Bandiera</label>
+    <select id="bandiera">
+      <option value="tutte">Tutte</option>
+    </select>
+  </div>
+
+  <div class="campo">
+    <label for="ordine">Ordina per</label>
+    <select id="ordine">
+      <option value="prezzo">Prezzo</option>
+      <option value="distanza">Distanza</option>
+      <option value="convenienza">Convenienza reale</option>
+    </select>
+  </div>
+
+  <label class="interruttore">
+    <input type="checkbox" id="escludi-autostrada" checked>
+    <span>Escludi i distributori autostradali</span>
+  </label>
+
+  <div class="campo doppio">
+    <div>
+      <label for="litri">Litri per pieno</label>
+      <input type="number" id="litri" min="5" max="120" step="1" value="40" inputmode="numeric">
+    </div>
+    <div>
+      <label for="consumo">Km per litro</label>
+      <input type="number" id="consumo" min="3" max="40" step="0.5" value="15" inputmode="decimal">
+    </div>
+  </div>
+  <p class="nota">Servono a calcolare quanto risparmi davvero, tolto il carburante che consumi per arrivarci.</p>
+
+  <div class="campo">
+    <label for="provincia-manuale">Provincia</label>
+    <select id="provincia-manuale">
+      <option value="auto">Automatica, dalla posizione</option>
+    </select>
+  </div>
+</div>
+
+<main id="risultati">
+  <p class="vuoto" id="messaggio">Carico i dati…</p>
+</main>
+
+<footer class="piede">
+  <p id="riga-dati">Prezzi ufficiali MIMIT, licenza IODL 2.0.</p>
+  <p>Le distanze sono in linea d'aria, non su strada.</p>
+</footer>
+
+<script src="app.js"></script>
+</body>
+</html>

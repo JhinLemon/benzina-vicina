@@ -11,3 +11,8 @@ dependencies = []
 # niente pacchetto da installare: qui ci sono solo script che si lanciano con `uv run`
 [tool.uv]
 package = false
+
+[tool.ruff]
+# Il default di ruff e' 88 caratteri, che qui spezzerebbe URL e messaggi in
+# modo peggiore di come si leggono su una riga sola.
+line-length = 100
