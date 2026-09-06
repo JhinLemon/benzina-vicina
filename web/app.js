@@ -591,7 +591,12 @@ async function usaProvinciaManuale(sigla) {
   disegna();
 }
 
-function chiediPosizione() {
+/** Chiede la posizione al telefono.
+ *
+ * `soloPosizione` serve al caso senza rete: gli impianti li abbiamo gia' ripresi
+ * dalla memoria locale, manca solo sapere dove siamo. E il GPS funziona lo stesso,
+ * perche' la posizione la danno i satelliti, non la connessione dati. */
+function chiediPosizione(soloPosizione = false) {
   if (!navigator.geolocation) {
     mostraSenzaPosizione("Questo browser non sa dire dove sei.");
     return;
@@ -603,6 +608,12 @@ function chiediPosizione() {
         lat: posizione.coords.latitude,
         lon: posizione.coords.longitude,
       };
+
+      if (soloPosizione) {
+        disegna();
+        messaggioStato.textContent = "Sei senza rete: mostro i dati dell'ultima volta.";
+        return;
+      }
 
       try {
         const sigle = provinceVicine(stato.posizione.lat, stato.posizione.lon, PROVINCE_DA_CARICARE);
@@ -762,14 +773,21 @@ async function avvia() {
   applicaPreferenzeAllInterfaccia();
   collegaEventi();
 
+  let indiceScaricato = true;
   try {
     await caricaIndice();
   } catch (errore) {
-    if (recuperaDatiSalvati() && stato.posizione) {
-      disegna();
+    indiceScaricato = false;
+  }
+
+  // Senza rete provo la copia salvata l'ultima volta. Se c'è, manca solo la
+  // posizione: gli impianti li ho già, non c'è nient'altro da scaricare.
+  if (!indiceScaricato) {
+    if (!recuperaDatiSalvati()) {
+      mostraMessaggio("Non riesco a scaricare i dati. Controlla la connessione e ricarica.");
       return;
     }
-    mostraMessaggio("Non riesco a scaricare i dati. Controlla la connessione e ricarica.");
+    chiediPosizione(true);
     return;
   }
 
